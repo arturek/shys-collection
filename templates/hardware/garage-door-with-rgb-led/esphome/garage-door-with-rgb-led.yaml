@@ -279,12 +279,12 @@ light:
 
             if(id(forward)){
               if(id(led_pos) > 0){
-                it[id(led_pos)-1] = ESPColor(0,0,0);
-                it[pos2+id(ANIM_BREITE)] = ESPColor(0,0,0);
+                it[id(led_pos)-1] = esphome::Color(0,0,0);
+                it[pos2+id(ANIM_BREITE)] = esphome::Color(0,0,0);
               }
 
-              it.range(id(led_pos), id(led_pos) + id(ANIM_BREITE)) = ESPColor(255,0,0);
-              it.range(pos2, pos2 + id(ANIM_BREITE)) = ESPColor(255,0,0);
+              it.range(id(led_pos), id(led_pos) + id(ANIM_BREITE)) = esphome::Color(255,0,0);
+              it.range(pos2, pos2 + id(ANIM_BREITE)) = esphome::Color(255,0,0);
 
               if(id(led_pos) < (LAST - id(ANIM_BREITE)) + 1){
                 id(led_pos)++;
@@ -294,12 +294,12 @@ light:
 
             } else {
               if(id(led_pos) < (LAST - id(ANIM_BREITE)) +1){
-                it[id(led_pos)+id(ANIM_BREITE)] = ESPColor(0,0,0);
-                it[pos2-1] = ESPColor(0,0,0);
+                it[id(led_pos)+id(ANIM_BREITE)] = esphome::Color(0,0,0);
+                it[pos2-1] = esphome::Color(0,0,0);
               }
 
-              it.range(id(led_pos), id(led_pos) + id(ANIM_BREITE)) = ESPColor(255,0,0);
-              it.range(pos2, pos2 + id(ANIM_BREITE)) = ESPColor(255,0,0);
+              it.range(id(led_pos), id(led_pos) + id(ANIM_BREITE)) = esphome::Color(255,0,0);
+              it.range(pos2, pos2 + id(ANIM_BREITE)) = esphome::Color(255,0,0);
 
               if(id(led_pos) > 0){
                 id(led_pos)--;
@@ -337,12 +337,12 @@ light:
             if(prepare){
               if(id(forward)){
                 if(id(led_pos) > 0){
-                  it[id(led_pos)-1] = ESPColor(0,0,0);
-                  it[pos2+id(ANIM_BREITE)] = ESPColor(0,0,0);
+                  it[id(led_pos)-1] = esphome::Color(0,0,0);
+                  it[pos2+id(ANIM_BREITE)] = esphome::Color(0,0,0);
                 }
   
-                it.range(id(led_pos), id(led_pos) + id(ANIM_BREITE)) = ESPColor(255,0,0);
-                it.range(pos2, pos2 + id(ANIM_BREITE)) = ESPColor(255,0,0);
+                it.range(id(led_pos), id(led_pos) + id(ANIM_BREITE)) = esphome::Color(255,0,0);
+                it.range(pos2, pos2 + id(ANIM_BREITE)) = esphome::Color(255,0,0);
   
                 if(id(led_pos) < (LAST - id(ANIM_BREITE)) +1){
                   id(led_pos)++;
@@ -352,12 +352,12 @@ light:
   
               } else {
                 if(id(led_pos) < (LAST - id(ANIM_BREITE)) +1){
-                  it[id(led_pos)+id(ANIM_BREITE)] = ESPColor(0,0,0);
-                  it[pos2-1] = ESPColor(0,0,0);
+                  it[id(led_pos)+id(ANIM_BREITE)] = esphome::Color(0,0,0);
+                  it[pos2-1] = esphome::Color(0,0,0);
                 }
   
-                it.range(id(led_pos), id(led_pos) + id(ANIM_BREITE)) = ESPColor(255,0,0);
-                it.range(pos2, pos2 + id(ANIM_BREITE)) = ESPColor(255,0,0);
+                it.range(id(led_pos), id(led_pos) + id(ANIM_BREITE)) = esphome::Color(255,0,0);
+                it.range(pos2, pos2 + id(ANIM_BREITE)) = esphome::Color(255,0,0);
   
                 if(id(led_pos) > 0){
                   id(led_pos)--;
@@ -370,8 +370,8 @@ light:
 
             } else {
               if(blendInRed){
-                it.range(id(led_pos), id(led_pos) + id(ANIM_BREITE)) = ESPColor(r,0,0);
-                it.range(pos2, pos2 + id(ANIM_BREITE)) = ESPColor(r,0,0);
+                it.range(id(led_pos), id(led_pos) + id(ANIM_BREITE)) = esphome::Color(r,0,0);
+                it.range(pos2, pos2 + id(ANIM_BREITE)) = esphome::Color(r,0,0);
 
                 if(id(led_pos) < (LAST - id(ANIM_BREITE)) +1){
                   id(led_pos)++;
@@ -381,7 +381,7 @@ light:
                 delay(id(DEFAULT_DELAY));
 
               } else {
-                it.all() = ESPColor(r, 255-r, 0);
+                it.all() = esphome::Color(r, 255-r, 0);
                 if(r>0){
                   r=r-5;
                 }
@@ -415,8 +415,8 @@ light:
 
             if(!ready){
               if(forward){
-                it.range(id(led_pos), id(led_pos) + id(ANIM_BREITE)) = ESPColor(colorVal, colorVal, colorVal);
-                it.range(pos2, pos2 + id(ANIM_BREITE)) = ESPColor(colorVal, colorVal, colorVal);
+                it.range(id(led_pos), id(led_pos) + id(ANIM_BREITE)) = esphome::Color(colorVal, colorVal, colorVal);
+                it.range(pos2, pos2 + id(ANIM_BREITE)) = esphome::Color(colorVal, colorVal, colorVal);
 
                 if(id(led_pos) < (LAST/2) - id(ANIM_BREITE) +1){
                   id(led_pos)++;
@@ -426,8 +426,8 @@ light:
                 }
 
               } else {
-                it.range(id(led_pos), id(led_pos) + id(ANIM_BREITE)) = ESPColor(colorVal, colorVal, colorVal);
-                it.range(pos2, pos2 + id(ANIM_BREITE)) = ESPColor(colorVal, colorVal, colorVal);
+                it.range(id(led_pos), id(led_pos) + id(ANIM_BREITE)) = esphome::Color(colorVal, colorVal, colorVal);
+                it.range(pos2, pos2 + id(ANIM_BREITE)) = esphome::Color(colorVal, colorVal, colorVal);
 
                 if(id(led_pos) > 0){
                   id(led_pos)--;
@@ -441,23 +441,23 @@ light:
               }
             } else {
               if(forward){
-                it.range(id(led_pos), id(led_pos) + id(ANIM_BREITE)) = ESPColor(255,255,255);
-                it.range(pos2, pos2 + id(ANIM_BREITE)) = ESPColor(255,255,255);
+                it.range(id(led_pos), id(led_pos) + id(ANIM_BREITE)) = esphome::Color(255,255,255);
+                it.range(pos2, pos2 + id(ANIM_BREITE)) = esphome::Color(255,255,255);
   
                 if(id(led_pos) < (LAST - id(ANIM_BREITE)*2) + 1){
                   if(id(led_pos) > 0){
-                    it[id(led_pos)-1] = ESPColor(0,0,0);
-                    it[pos2+id(ANIM_BREITE)] = ESPColor(0,0,0);
+                    it[id(led_pos)-1] = esphome::Color(0,0,0);
+                    it[pos2+id(ANIM_BREITE)] = esphome::Color(0,0,0);
                   }
                   id(led_pos)++;
                 } else {
                   if(id(led_pos) < (LAST - id(ANIM_BREITE)) +1){
-                    it[id(led_pos)+id(ANIM_BREITE)] = ESPColor(0,0,0);
-                    it[pos2-1] = ESPColor(0,0,0);
+                    it[id(led_pos)+id(ANIM_BREITE)] = esphome::Color(0,0,0);
+                    it[pos2-1] = esphome::Color(0,0,0);
                   }
     
-                  it.range(id(led_pos), id(led_pos) + id(ANIM_BREITE)) = ESPColor(255,255,255);
-                  it.range(pos2, pos2 + id(ANIM_BREITE)) = ESPColor(255,255,255);
+                  it.range(id(led_pos), id(led_pos) + id(ANIM_BREITE)) = esphome::Color(255,255,255);
+                  it.range(pos2, pos2 + id(ANIM_BREITE)) = esphome::Color(255,255,255);
     
                   if(id(led_pos) > id(ANIM_BREITE)+1){
                     id(led_pos)--;
