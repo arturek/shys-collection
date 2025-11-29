@@ -1,0 +1,73 @@
+- type: sections
+  max_columns: 4
+  title: Heizungsbooster
+  path: heizungsbooster
+  icon: mdi:heating-coil
+  sections:
+    - type: grid
+      cards:
+        - type: heading
+          heading: Heizungsbooster
+          heading_style: title
+        - type: custom:mushroom-select-card
+          entity: select.shys_heizungsbooster_betriebsmodus
+          grid_options:
+            columns: 12
+            rows: 2
+        - type: custom:mushroom-fan-card
+          entity: fan.shys_heizungsbooster_ventilator
+          show_percentage_control: true
+          layout: horizontal
+          grid_options:
+            columns: 24
+            rows: 1
+        - type: custom:mushroom-entity-card
+          entity: binary_sensor.shys_heizungsbooster_mode_button
+          grid_options:
+            columns: 12
+            rows: 1
+        - type: custom:mushroom-entity-card
+          entity: binary_sensor.shys_heizungsbooster_set_button
+          grid_options:
+            columns: 12
+            rows: 1
+      column_span: 3
+    - type: grid
+      cards:
+        - type: heading
+          heading: SHYS Heizungsbooster Sensoren
+          heading_style: title
+        - type: entities
+          entities:
+            - entity: sensor.meter_plus_caa2
+            - entity: sensor.shys_heizungsbooster_raumtemperatur_ds18b20_2
+              name: Raum-Temperatur (DS18B20)
+            - entity: sensor.shys_heizungsbooster_raumtemperatur_favorit
+              name: Raum-Temperatur (Fav.)
+            - entity: sensor.shys_heizungsbooster_heizkorper_temperatur_ds18b20_1
+              name: Heizungs-Temperatur
+          grid_options:
+            columns: 24
+            rows: auto
+      column_span: 1
+    - type: grid
+      cards:
+        - type: heading
+          heading: Neuer Abschnitt
+        - type: entities
+          entities:
+            - entity: number.shys_heizungsbooster_manuelle_luftergeschwindigkeit
+              name: Lüfter-Geschwindigkeit (Manuell)
+            - entity: number.shys_heizungsbooster_minimale_heizungstemperatur
+              name: Minimale Heizungs-Temperatur
+            - entity: number.shys_heizungsbooster_maximale_heizungstemperatur
+              name: Maximale Heizungs-Temperatur
+            - entity: number.shys_heizungsbooster_standard_raumtemperatur
+              name: Standard Raum-Temperatur
+            - entity: number.shys_heizungsbooster_temperatur_schwellwert
+              name: Temperatur Schwellenwert
+          grid_options:
+            columns: 24
+            rows: auto
+      column_span: 2
+

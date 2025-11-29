@@ -1,0 +1,15 @@
+"ID";"Bezeichner";"Footprint";"Stückzahl";"Bezeichnung";"Anbieter und Referenz";
+1;"R8,R6,R11,R7,R5,R9,R10";"R_1206_3216Metric";7;"10K";;;
+2;"C1";"C_1206_3216Metric";1;"100nF";;;
+3;"U1";"ESP-12E";1;"ESP-12F";;;
+4;"R1";"R_1206_3216Metric";1;"4,7K";;;
+5;"U4,U2";"TerminalBlock_Xinya_XY308-2.54-3P_1x03_P2.54mm_Horizontal";2;"DS18B20";;;
+6;"Brd1";"PinHeader_1x04_P2.54mm_Vertical";1;"SSD1306 (OLED)";;;
+7;"J2";"TerminalBlock_Xinya_XY308-2.54-3P_1x03_P2.54mm_Horizontal";1;"Analog Input";;;
+8;"Q1";"TO-220-3_Vertical";1;"NMOS";;;
+9;"M3,M2,M1";"FanPinHeader_1x03_P2.54mm_Vertical";3;"Fan_Tacho";;;
+10;"S2,S3,S1,S4";"Switch_Tactile_THT_B3F-1xxx";4;"B3F-1000";;;
+11;"J1";"TerminalBlock_RND_205-00012_1x02_P5.00mm_Horizontal";1;"12V Power Input";;;
+12;"J6";"PinHeader_1x02_P2.54mm_Vertical";1;"RX/TX";;;
+13;"U3";"SOT_SMDSOT-223-3_GND_Tab";1;"NCP1117-12_SOT223";;;
+14;"J4";"PinHeader_1x02_P2.54mm_Vertical";1;"3V3 Out";;;
