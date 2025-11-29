@@ -1,0 +1,97 @@
+esphome:
+  name: sensor-pyramide
+  friendly_name: Sensor Pyramide
+esp8266:
+  board: nodemcuv2
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Sensor-Pyramide"
+    password: "fnlIp2hjHmrL"
+
+captive_portal:
+
+# Enable logging
+logger:
+
+api:
+  encryption:
+    key: !secret ESPHOME_ENCRYPTION_KEY
+
+ota:
+  platform: esphome
+  password: !secret ota_password
+
+
+
+sensor:
+  - platform: dht
+    pin: GPIO12
+    temperature:
+      name: "Wohnzimmer Temperatur"
+      unit_of_measurement: "°C"
+
+    humidity:
+      name: "Wohnzimmer Luftfeuchtigkeit"
+      unit_of_measurement: "g/m3"
+
+    update_interval: 60s
+
+  - platform: adc
+    pin: A0
+    name: Wohnzimmer Gas
+
+binary_sensor:
+  - platform: gpio
+    pin: GPIO5
+    name: Wohnzimmer Bewegung
+    device_class: motion
+
+  - platform: gpio
+    pin: GPIO4
+    name: Wohnzimmer Licht
+    device_class: light
+    filters:
+      - invert:
+
+  - platform: gpio
+    pin: GPIO14
+    name: Wohnzimmer Ton
+    device_class: sound
+    filters:
+      - invert:
+      - delayed_off: 2s
+  
+
+switch:
+  - platform: gpio
+    pin: GPIO0
+    name: Wohnzimmer Buzzer
+
+  - platform: gpio
+    pin: 2
+    name: internal_led1
+    restore_mode: ALWAYS_ON
+    internal: true
+    
+  - platform: gpio
+    pin: 16
+    name: internal_led1
+    restore_mode: ALWAYS_ON
+    internal: true
+    
+
+light:
+  - platform: neopixelbus
+    type: GRB
+    variant: WS2812
+    pin: GPIO13
+    num_leds: 12
+    name: "Wohnzimmer Pyramide LED"
+    id: pyramide_led
+    default_transition_length: 2s
+
