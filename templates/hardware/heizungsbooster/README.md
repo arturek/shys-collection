@@ -208,6 +208,8 @@ Ein Beispiel-Dashboard für Home Assistant findet sich unter `assets/dashboard-e
 
 ## Verwendete Bauteile
 
+- 3x [60x60 Lüfter Günstig](https://amzn.to/4pwRt7u) oder [Noctua NF-A6x25](https://amzn.to/4iGnE1n)
+
 - 1x [ESP 12F](https://amzn.to/4px21mF)  
   (12E Funktioniert genau so)  
 
@@ -247,11 +249,11 @@ https://www.elecrow.com/sharepj/diy-heating-booster-with-esphome-1125.html
 ## Video zum Projekt
 
 **Video zum Heizungs-Booster mit ESPHome:**  
-[![Heizungs-Booster](http://img.youtube.com/vi/jhAS_OhYyys/0.jpg)](https://www.youtube.com/watch?v=jhAS_OhYyys "Video zum Heizungs-Booster")
+[![Heizungs-Booster](http://img.youtube.com/vi/QziFyC4AdUs/0.jpg)](https://www.youtube.com/watch?v=QziFyC4AdUs "Video zum Heizungs-Booster")
 
 ---
 
 ## Weitere Informationen
 
-Eine ausführliche Anleitung des Projektes findet Ihr unter:  
+Weitere Informationen zum Projekt findet Ihr auch noch im Blog unter:  
 https://smarthomeyourself.de/blog/heizungs-booster-mit-esphome/
