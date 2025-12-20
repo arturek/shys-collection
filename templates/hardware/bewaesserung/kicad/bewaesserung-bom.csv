@@ -1,0 +1,31 @@
+Reference	Value	Footprint	Datasheet	Qty	DNP	Exclude from BOM	Exclude from Board
+C1,C2,C3,C6	100nF	Capacitor_SMD:C_1206_3216Metric	~	4			
+C4,C5	10uF	Capacitor_SMD:C_1206_3216Metric	~	2			
+D1,D2,D3,D4	1N4007	Diode_SMD:D_1206_3216Metric	~	4			
+D5,D6,D7,D8	LED	LED_SMD:LED_0805_2012Metric	~	4			
+J1	5V Power Input	TerminalBlock_RND:TerminalBlock_RND_205-00012_1x02_P5.00mm_Horizontal	~	1			
+J2	Bodenfeuchte Sensor 1	Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical	https://www.molex.com/pdm_docs/sd/022232031_sd.pdf	1			
+J3	Bodenfeuchte Sensor 2	Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical	https://www.molex.com/pdm_docs/sd/022232031_sd.pdf	1			
+J4	Bodenfeuchte Sensor 3	Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical	https://www.molex.com/pdm_docs/sd/022232031_sd.pdf	1			
+J5	Bodenfeuchte Sensor 4	Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical	https://www.molex.com/pdm_docs/sd/022232031_sd.pdf	1			
+J6	Sensor Power Jumper	Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical	https://www.molex.com/pdm_docs/sd/022232031_sd.pdf	1			
+J7	Pumpe 1	TerminalBlock:TerminalBlock_Altech_AK300-2_P5.00mm	~	1			
+J8	Pumpe 2	TerminalBlock:TerminalBlock_Altech_AK300-2_P5.00mm	~	1			
+J9	Pumpe 3	TerminalBlock:TerminalBlock_Altech_AK300-2_P5.00mm	~	1			
+J10	Pumpe 4	TerminalBlock:TerminalBlock_Altech_AK300-2_P5.00mm	~	1			
+J11	PIN-OUT	digikey-footprints:PinHeader_6x2_P2.54mm_Vertical	~	1			
+J12	PWR-OUT	digikey-footprints:PinHeader_6x2_P2.54mm_Vertical	~	1			
+J13	I2C	Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical	https://www.molex.com/pdm_docs/sd/022232041_sd.pdf	1			
+J14,J15	640456-2	Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical	https://www.te.com/commerce/DocumentDelivery/DDEController?Action=srchrtrv&DocNm=640456&DocType=Customer+Drawing&DocLang=English	2			
+Q1	AO3400 - 1	ao3400:AO3400_SOT23_Corrected		1			
+Q2	AO3400 - 2	ao3400:AO3400_SOT23_Corrected		1			
+Q3	AO3400 - 3	ao3400:AO3400_SOT23_Corrected		1			
+Q4	AO3400 - 4	ao3400:AO3400_SOT23_Corrected		1			
+R1,R2,R3,R4,R16	10k	Resistor_SMD:R_1206_3216Metric	~	5			
+R5,R6,R7,R8,R9,R10,R11	10K	Resistor_SMD:R_1206_3216Metric	~	7			
+R12,R13,R14,R15	2,2k	Resistor_SMD:R_1206_3216Metric	~	4			
+S1,S2,S3,S4	B3F-1000	digikey-footprints:Switch_Tactile_THT_B3F-1xxx	https://omronfs.omron.com/en_US/ecb/products/pdf/en-b3f.pdf	4			
+U1	ESP-12F	RF_Module:ESP-12E	http://www.esp8266.com/wiki/doku.php?id=esp8266-module-family	1			
+U2	ADS1115IDGS	Connector_PinHeader_2.54mm:PinHeader_1x10_P2.54mm_Vertical	http://www.ti.com/lit/ds/symlink/ads1113.pdf	1			
+U3	NCP1117-12_SOT223	Package_TO_SOT_SMD:SOT-223-3_TabPin2	http://www.onsemi.com/pub_link/Collateral/NCP1117-D.PDF	1			
+U4	MCP23017_SO	Package_SO:SOIC-28W_7.5x17.9mm_P1.27mm	https://ww1.microchip.com/downloads/aemDocuments/documents/APID/ProductDocuments/DataSheets/MCP23017-Data-Sheet-DS20001952.pdf	1			

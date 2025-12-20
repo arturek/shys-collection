@@ -1,0 +1,808 @@
+###############################################################################
+#                                                                             #
+#   ESPHome Automatische Bewässerung mit Grow-Kalender                        #
+#                                                                             #
+#  Hardware:                                                                  #
+#  - ESP8266 ESP-01 (1MB)                                                     #
+#  - MCP23017 I²C Port Expander (16x GPIO)                                    #
+#  - ADS1115 I²C ADC (4x Analog Input)                                        #
+#  - 2x Tauchpumpen (12V über MOSFET)                                         #
+#  - 2x Kapazitive Bodenfeuchtesensoren (mit Poti-Modul)                      #
+#  - 1x Schwimmer-Sensor (Wassertank)                                         #
+#                                                                             #
+#  Features:                                                                  #
+#  - Hybrid-Bewässerung (Zeitplan + Bodenfeuchtigkeit)                        #
+#  - Automatische Phasen-Erkennung (Wachstum → Blüte → Ernte)                 #
+#  - Phasenabhängige Wassermengen (150ml - 700ml)                             #
+#  - NTP Zeit-Synchronisation                                                 #
+#  - Kalibrierbare Pumpenleistung                                             #
+#  - Notaus bei leerem Tank                                                   #
+#  - Sensor-Ausfall-Sicherheit                                                #
+#                                                                             #
+#  Version: 2.0 Final (2 Pumpen / 2 Sensoren)                                 #
+#  Datum: 2025-10-16                                                          #
+#                                                                             #
+###############################################################################
+
+substitutions:
+  # I²C Pins
+  SDA_PIN: GPIO4
+  SCL_PIN: GPIO5
+
+  # I²C Adressen
+  MCP23017_I2C_ADDRESS: "0x20"
+  ADS1115_I2C_ADDRESS: "0x48"
+
+  # Namen der Ausgänge
+  OUTPUT1_NAME: "Pumpe 1"
+  OUTPUT2_NAME: "Pumpe 2"
+
+  # Namen der Sensoren
+  ANALOG_IN1_NAME: "Feuchtigkeit Sensor 1"
+  ANALOG_IN2_NAME: "Feuchtigkeit Sensor 2"
+
+  WASSERSCHWIMMER_NAME: "Wassertank Schwimmer"
+
+  # ⚙️ KALIBRIERUNG: Hier deine gemessene Pumpenleistung eintragen!
+  # Messung: Pumpe 10 Sekunden laufen lassen → Wasser messen → durch 10 teilen
+  PUMP_ML_PER_SECOND: "50.0"  # ml/Sekunde (NACH MESSUNG ANPASSEN!)
+
+esphome:
+  name: bewaesserung
+  friendly_name: Bewässerung
+  comment: "Automatische Bewässerung mit Grow-Kalender (2 Pflanzen)"
+
+esp8266:
+  board: esp01_1m
+  restore_from_flash: true
+
+logger:
+  level: DEBUG
+  logs:
+    sensor: INFO
+    i2c: DEBUG
+
+api:
+  encryption:
+    key: !secret api_encryption_key
+  reboot_timeout: 0s
+
+ota:
+  platform: esphome
+  password: !secret ota_password
+
+# NTP Zeit-Synchronisation
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: Europe/Berlin
+    servers:
+      - 0.pool.ntp.org
+      - 1.pool.ntp.org
+      - 2.pool.ntp.org
+    on_time_sync:
+      then:
+        - logger.log: "⏰ Zeit synchronisiert"
+        - script.execute: update_grow_phase
+    # Tägliche Bewässerungsprüfung um 08:00 Uhr
+    on_time:
+      - seconds: 0
+        minutes: 0
+        hours: 8
+        then:
+          - logger.log: "🔔 Tägliche Bewässerungsprüfung"
+          - script.execute: daily_watering_check
+  
+wifi:
+  networks:
+    - ssid: !secret wifi_ssid
+      password: !secret wifi_password
+  output_power: 20dB
+  manual_ip:
+    static_ip: 192.168.178.59
+    gateway: 192.168.178.1
+    subnet: 255.255.255.0
+    dns1: 192.168.178.1
+  reboot_timeout: 0s
+  fast_connect: on
+
+  ap:
+    ssid: "Bewaesserung Fallback"
+    password: !secret ap_password
+
+captive_portal:
+
+web_server:
+  port: 80
+  auth:
+    username: admin
+    password: !secret web_password
+
+# I²C Bus
+i2c:
+  sda: ${SDA_PIN}
+  scl: ${SCL_PIN}
+  id: i2c_component
+  frequency: 50kHz
+  scan: true
+
+# 16x Binary GPIO Portexpander
+mcp23017:
+  - id: mcp1
+    address: ${MCP23017_I2C_ADDRESS}
+
+# 4x Analog Input Portexpander
+ads1115:
+  - address: ${ADS1115_I2C_ADDRESS}
+    id: ads1
+    continuous_mode: true
+
+###############################################################################
+# GLOBALE VARIABLEN
+###############################################################################
+
+globals:
+  # Startdatum als Unix Timestamp
+  - id: grow_start_timestamp
+    type: int
+    restore_value: yes
+    initial_value: '0'
+  
+  # Aktuelle Wachstumsphase
+  # 0=Nicht gestartet, 1=Wachstum, 2=Vorblüte, 3=Blüte, 4=Hauptblüte, 5=Spätblüte, 6=Spülen, 7=Ernte
+  - id: current_phase
+    type: int
+    restore_value: yes
+    initial_value: '0'
+  
+  # Aktueller Grow-Tag
+  - id: current_grow_day
+    type: int
+    restore_value: yes
+    initial_value: '0'
+  
+  # Letzter Bewässerungstag (zur Intervall-Kontrolle)
+  - id: last_watering_day
+    type: int
+    restore_value: yes
+    initial_value: '-999'
+  
+  # Kalibrierte Pumpenleistung (kann über HA angepasst werden)
+  - id: pump_calibration
+    type: float
+    restore_value: yes
+    initial_value: '${PUMP_ML_PER_SECOND}'
+
+###############################################################################
+# PUMPEN (MOSFET-Ausgänge über MCP23017)
+###############################################################################
+
+switch:
+  - platform: gpio
+    id: pumpe1
+    name: ${OUTPUT1_NAME}
+    restore_mode: ALWAYS_OFF
+    pin:
+      mcp23xxx: mcp1
+      number: 8
+      mode: OUTPUT
+      inverted: false
+    on_turn_on:
+      - logger.log: "🔵 Pumpe 1 manuell EIN"
+    on_turn_off:
+      - logger.log: "⚫ Pumpe 1 manuell AUS"
+
+  - platform: gpio
+    id: pumpe2
+    name: ${OUTPUT2_NAME}
+    restore_mode: ALWAYS_OFF
+    pin:
+      mcp23xxx: mcp1
+      number: 9
+      mode: OUTPUT
+      inverted: false
+    on_turn_on:
+      - logger.log: "🔵 Pumpe 2 manuell EIN"
+    on_turn_off:
+      - logger.log: "⚫ Pumpe 2 manuell AUS"
+  
+  # Automatische Bewässerung aktivieren/deaktivieren
+  - platform: template
+    name: "Auto-Bewässerung"
+    id: auto_watering_enabled
+    restore_mode: RESTORE_DEFAULT_ON
+    optimistic: true
+    icon: "mdi:water-pump"
+    on_turn_on:
+      - logger.log: "✅ Auto-Bewässerung aktiviert"
+    on_turn_off:
+      - logger.log: "⏸️ Auto-Bewässerung deaktiviert"
+
+###############################################################################
+# SENSOREN
+###############################################################################
+
+sensor:
+  # Bodenfeuchtesensoren (ADS1115)
+  - platform: ads1115
+    ads1115_id: ads1
+    gain: 6.144
+    multiplexer: 'A0_GND'
+    name: ${ANALOG_IN1_NAME}
+    id: feuchtigkeit1
+    update_interval: 60s
+    unit_of_measurement: "V"
+    accuracy_decimals: 3
+    device_class: voltage
+    state_class: measurement
+    filters:
+      - sliding_window_moving_average:
+          window_size: 5
+          send_every: 1
+    on_value:
+      - logger.log:
+          format: "📊 Sensor 1: %.3fV"
+          args: ['x']
+
+  - platform: ads1115
+    ads1115_id: ads1
+    gain: 6.144
+    multiplexer: 'A1_GND'
+    name: ${ANALOG_IN2_NAME}
+    id: feuchtigkeit2
+    update_interval: 60s
+    unit_of_measurement: "V"
+    accuracy_decimals: 3
+    device_class: voltage
+    state_class: measurement
+    filters:
+      - sliding_window_moving_average:
+          window_size: 5
+          send_every: 1
+    on_value:
+      - logger.log:
+          format: "📊 Sensor 2: %.3fV"
+          args: ['x']
+
+  # WiFi Signal
+  - platform: wifi_signal
+    name: "WiFi Signal"
+    update_interval: 60s
+    filters:
+      - sliding_window_moving_average:
+          window_size: 3
+
+  # Uptime
+  - platform: uptime
+    name: "Uptime"
+    update_interval: 60s
+
+  # Grow-Tag
+  - platform: template
+    name: "Grow Tag"
+    id: grow_day_sensor
+    icon: "mdi:calendar-today"
+    unit_of_measurement: "Tag"
+    accuracy_decimals: 0
+    update_interval: 600s
+    lambda: |-
+      return id(current_grow_day);
+
+  # Nächste Bewässerung in X Tagen
+  - platform: template
+    name: "Nächste Bewässerung in"
+    icon: "mdi:calendar-clock"
+    unit_of_measurement: "Tagen"
+    accuracy_decimals: 0
+    update_interval: 600s
+    lambda: |-
+      if (id(current_phase) == 0 || id(current_phase) == 7) {
+        return 0;
+      }
+      
+      int phase = id(current_phase);
+      int interval = 2;  // Standard: alle 2 Tage
+      if (phase == 1) interval = 3;  // Wachstum: alle 3 Tage
+      
+      int days_since = id(current_grow_day) - id(last_watering_day);
+      int days_until = interval - days_since;
+      
+      if (days_until < 0) return 0;
+      return days_until;
+
+###############################################################################
+# BINARY SENSOREN
+###############################################################################
+
+binary_sensor:
+  # Wassertank Schwimmer
+  - platform: gpio
+    name: ${WASSERSCHWIMMER_NAME}
+    id: wasserstand
+    device_class: moisture
+    pin:
+      mcp23xxx: mcp1
+      number: 7
+      mode: INPUT_PULLUP
+      inverted: false
+    filters:
+      - delayed_on: 100ms
+      - delayed_off: 100ms
+    on_press:
+      - logger.log: "✅ Wassertank: VOLL"
+    on_release:
+      then:
+        - script.execute: notaus
+        - logger.log:
+            format: "🚨 NOTAUS: Wassertank LEER!"
+            level: ERROR
+
+  # Status
+  - platform: status
+    name: "Status"
+
+###############################################################################
+# TEXT SENSOREN
+###############################################################################
+
+text_sensor:
+  - platform: version
+    name: "ESPHome Version"
+    hide_timestamp: true
+  
+  - platform: wifi_info
+    ip_address:
+      name: "IP Adresse"
+    ssid:
+      name: "SSID"
+    mac_address:
+      name: "MAC Adresse"
+  
+  # Wachstumsphase als Text
+  - platform: template
+    name: "Wachstumsphase"
+    id: phase_text
+    icon: "mdi:sprout"
+    update_interval: 60s
+    lambda: |-
+      int phase = id(current_phase);
+      if (phase == 0) return {"Nicht gestartet"};
+      else if (phase == 1) return {"Wachstum (Tag 20-35)"};
+      else if (phase == 2) return {"Vorblüte (Tag 36-42)"};
+      else if (phase == 3) return {"Blüte (Tag 43-56)"};
+      else if (phase == 4) return {"Hauptblüte (Tag 57-70)"};
+      else if (phase == 5) return {"Spätblüte (Tag 71-77)"};
+      else if (phase == 6) return {"Spülen (Tag 78-85)"};
+      else if (phase == 7) return {"🎉 Ernte bereit!"};
+      return {"Unbekannt"};
+  
+  # Startdatum als lesbarer Text
+  - platform: template
+    name: "Grow Startdatum"
+    id: start_date_text
+    icon: "mdi:calendar-start"
+    update_interval: 3600s
+    lambda: |-
+      if (id(grow_start_timestamp) == 0) {
+        return {"Nicht gesetzt"};
+      }
+      char buffer[20];
+      time_t start = id(grow_start_timestamp);
+      strftime(buffer, sizeof(buffer), "%d.%m.%Y", localtime(&start));
+      return {buffer};
+
+###############################################################################
+# NUMBER INPUTS
+###############################################################################
+
+number:
+  # Startdatum Eingabe
+  - platform: template
+    name: "Grow Start Tag"
+    id: grow_start_day_input
+    icon: "mdi:calendar-edit"
+    mode: box
+    min_value: 1
+    max_value: 31
+    step: 1
+    optimistic: true
+    
+  - platform: template
+    name: "Grow Start Monat"
+    id: grow_start_month_input
+    icon: "mdi:calendar-edit"
+    mode: box
+    min_value: 1
+    max_value: 12
+    step: 1
+    optimistic: true
+    
+  - platform: template
+    name: "Grow Start Jahr"
+    id: grow_start_year_input
+    icon: "mdi:calendar-edit"
+    mode: box
+    min_value: 2024
+    max_value: 2030
+    step: 1
+    optimistic: true
+    initial_value: 2025
+  
+  # Pumpen-Kalibrierung
+  - platform: template
+    name: "Pumpenleistung (ml/s)"
+    id: pump_ml_per_sec_input
+    icon: "mdi:pump"
+    mode: box
+    min_value: 10
+    max_value: 200
+    step: 0.1
+    initial_value: ${PUMP_ML_PER_SECOND}
+    optimistic: true
+    on_value:
+      then:
+        - lambda: |-
+            id(pump_calibration) = x;
+            ESP_LOGI("calibration", "✅ Pumpenleistung gesetzt: %.1f ml/s", x);
+
+###############################################################################
+# BUTTONS
+###############################################################################
+
+button:
+  # Startdatum setzen
+  - platform: template
+    name: "Startdatum setzen"
+    icon: "mdi:calendar-check"
+    on_press:
+      then:
+        - lambda: |-
+            int day = (int)id(grow_start_day_input).state;
+            int month = (int)id(grow_start_month_input).state;
+            int year = (int)id(grow_start_year_input).state;
+            
+            if (day < 1 || day > 31 || month < 1 || month > 12 || year < 2024) {
+              ESP_LOGE("grow", "❌ Ungültiges Datum: %d.%d.%d", day, month, year);
+              return;
+            }
+            
+            struct tm timeinfo;
+            timeinfo.tm_year = year - 1900;
+            timeinfo.tm_mon = month - 1;
+            timeinfo.tm_mday = day;
+            timeinfo.tm_hour = 0;
+            timeinfo.tm_min = 0;
+            timeinfo.tm_sec = 0;
+            timeinfo.tm_isdst = -1;
+            
+            time_t timestamp = mktime(&timeinfo);
+            id(grow_start_timestamp) = timestamp;
+            
+            ESP_LOGI("grow", "✅ Startdatum gesetzt: %02d.%02d.%d", day, month, year);
+        - script.execute: update_grow_phase
+  
+  # Grow zurücksetzen
+  - platform: template
+    name: "Grow zurücksetzen"
+    icon: "mdi:restart"
+    on_press:
+      then:
+        - lambda: |-
+            id(grow_start_timestamp) = 0;
+            id(current_phase) = 0;
+            id(current_grow_day) = 0;
+            id(last_watering_day) = -999;
+            ESP_LOGI("grow", "🔄 Grow zurückgesetzt");
+  
+  # Manuelle Bewässerung jetzt
+  - platform: template
+    name: "Jetzt bewässern (beide)"
+    icon: "mdi:water-pump"
+    on_press:
+      then:
+        - logger.log: "🔵 Manuelle Bewässerung gestartet"
+        - script.execute: daily_watering_check
+  
+  # Kalibrierungs-Buttons
+  - platform: template
+    name: "🧪 Test Pumpe 1 (10s)"
+    on_press:
+      then:
+        - logger.log: "🧪 Kalibrierung: Pumpe 1 für 10 Sekunden"
+        - if:
+            condition:
+              binary_sensor.is_on: wasserstand
+            then:
+              - switch.turn_on: pumpe1
+              - delay: 10s
+              - switch.turn_off: pumpe1
+              - logger.log: "✅ Test beendet - Miss jetzt das Wasser im Messbecher!"
+            else:
+              - logger.log:
+                  format: "🚨 Test abgebrochen - Kein Wasser im Tank!"
+                  level: ERROR
+  
+  - platform: template
+    name: "🧪 Test Pumpe 2 (10s)"
+    on_press:
+      then:
+        - logger.log: "🧪 Kalibrierung: Pumpe 2 für 10 Sekunden"
+        - if:
+            condition:
+              binary_sensor.is_on: wasserstand
+            then:
+              - switch.turn_on: pumpe2
+              - delay: 10s
+              - switch.turn_off: pumpe2
+              - logger.log: "✅ Test beendet - Miss jetzt das Wasser im Messbecher!"
+            else:
+              - logger.log:
+                  format: "🚨 Test abgebrochen - Kein Wasser im Tank!"
+                  level: ERROR
+  
+  - platform: template
+    name: "🧪 Test 250ml Bewässerung"
+    on_press:
+      then:
+        - lambda: |-
+            int duration = (int)(250.0 / id(pump_calibration));
+            ESP_LOGI("test", "🧪 Test: 250ml = %d Sekunden bei %.1f ml/s", duration, id(pump_calibration));
+            id(pumpe1_on).execute(duration);
+  
+  # Notaus Button
+  - platform: template
+    name: "🚨 NOTAUS"
+    icon: "mdi:alert-octagon"
+    on_press:
+      then:
+        - script.execute: notaus
+        - logger.log:
+            format: "🚨 NOTAUS manuell ausgelöst!"
+            level: WARN
+
+  # Restart Button
+  - platform: restart
+    name: "Neustart"
+    icon: "mdi:restart"
+
+###############################################################################
+# SCRIPTS
+###############################################################################
+
+script:
+  # Notaus - alle Pumpen sofort ausschalten
+  - id: notaus
+    mode: restart
+    then:
+      - switch.turn_off: pumpe1
+      - switch.turn_off: pumpe2
+      - logger.log:
+          format: "🚨 NOTAUS: Alle Pumpen ausgeschaltet"
+          level: ERROR
+
+  # Wachstumsphase basierend auf aktuellem Datum berechnen
+  - id: update_grow_phase
+    mode: restart
+    then:
+      - lambda: |-
+          if (id(grow_start_timestamp) == 0) {
+            id(current_phase) = 0;
+            id(current_grow_day) = 0;
+            ESP_LOGW("grow", "⏸️ Kein Startdatum gesetzt");
+            return;
+          }
+          
+          auto time = id(sntp_time).now();
+          if (!time.is_valid()) {
+            ESP_LOGW("grow", "⏰ Zeit noch nicht synchronisiert");
+            return;
+          }
+          
+          time_t now = time.timestamp;
+          time_t start = id(grow_start_timestamp);
+          int days = (now - start) / 86400;  // 86400 Sekunden = 1 Tag
+          
+          id(current_grow_day) = days;
+          
+          int old_phase = id(current_phase);
+          
+          // Phase basierend auf Tag bestimmen (aus PDF)
+          if (days < 20) {
+            id(current_phase) = 0;  // Keimung (nicht im Plan)
+          } else if (days >= 20 && days <= 35) {
+            id(current_phase) = 1;  // Wachstum
+          } else if (days >= 36 && days <= 42) {
+            id(current_phase) = 2;  // Vorblüte
+          } else if (days >= 43 && days <= 56) {
+            id(current_phase) = 3;  // Blüte
+          } else if (days >= 57 && days <= 70) {
+            id(current_phase) = 4;  // Hauptblüte
+          } else if (days >= 71 && days <= 77) {
+            id(current_phase) = 5;  // Spätblüte
+          } else if (days >= 78 && days <= 85) {
+            id(current_phase) = 6;  // Spülen
+          } else if (days > 85) {
+            id(current_phase) = 7;  // Ernte bereit
+          }
+          
+          // Log nur bei Phasenwechsel
+          if (old_phase != id(current_phase)) {
+            ESP_LOGI("grow", "🌱 Phasenwechsel: %d → %d (Tag %d)", old_phase, id(current_phase), days);
+          } else {
+            ESP_LOGD("grow", "📅 Grow Tag: %d, Phase: %d", days, id(current_phase));
+          }
+
+  # Tägliche Bewässerungsprüfung (Hybrid-Ansatz)
+  - id: daily_watering_check
+    mode: single
+    then:
+      - lambda: |-
+          ESP_LOGI("watering", "═══════════════════════════════════════════════");
+          ESP_LOGI("watering", "🔔 Bewässerungsprüfung gestartet");
+          
+          // Prüfe ob Auto-Bewässerung aktiv
+          if (!id(auto_watering_enabled).state) {
+            ESP_LOGW("watering", "⏸️ Auto-Bewässerung deaktiviert - Abbruch");
+            return;
+          }
+          
+          // Prüfe ob Grow gestartet
+          if (id(current_phase) == 0) {
+            ESP_LOGW("watering", "⏸️ Grow noch nicht gestartet - Abbruch");
+            return;
+          }
+          
+          // Prüfe ob Ernte-Phase
+          if (id(current_phase) == 7) {
+            ESP_LOGW("watering", "🎉 Ernte bereit - keine Bewässerung mehr!");
+            return;
+          }
+          
+          int phase = id(current_phase);
+          int day = id(current_grow_day);
+          
+          // Bewässerungsintervall nach Phase
+          int interval_days = 2;  // Standard: alle 2 Tage
+          if (phase == 1) interval_days = 3;  // Wachstum: alle 3 Tage
+          
+          // Prüfe ob genug Tage seit letzter Bewässerung vergangen
+          int days_since = day - id(last_watering_day);
+          if (days_since < interval_days) {
+            ESP_LOGI("watering", "⏳ Noch %d Tag(e) bis zur nächsten Bewässerung (Intervall: %d Tage)", 
+                     interval_days - days_since, interval_days);
+            return;
+          }
+          
+          ESP_LOGI("watering", "💧 BEWÄSSERUNGSTAG! (Tag %d, Phase %d)", day, phase);
+          
+          // Ziel-Wassermenge und Schwellwert nach Phase (aus PDF)
+          int target_ml = 500;
+          float threshold = 0.6;  // 60% Feuchtigkeit (in Volt)
+          
+          if (phase == 1) {  // Wachstum (Tag 20-35)
+            target_ml = 200;  // 150-250ml → Mittelwert 200ml
+            threshold = 0.65;
+          } else if (phase == 2) {  // Vorblüte (Tag 36-42)
+            target_ml = 400;
+            threshold = 0.60;
+          } else if (phase == 3) {  // Blüte (Tag 43-56)
+            target_ml = 500;
+            threshold = 0.55;
+          } else if (phase == 4) {  // Hauptblüte (Tag 57-70)
+            target_ml = 650;  // 600-700ml → Mittelwert 650ml
+            threshold = 0.50;
+          } else if (phase == 5) {  // Spätblüte (Tag 71-77)
+            target_ml = 600;
+            threshold = 0.50;
+          } else if (phase == 6) {  // Spülen (Tag 78-85)
+            target_ml = 600;
+            threshold = 0.50;
+          }
+          
+          // Pumpenzeit berechnen
+          float pump_ml_per_sec = id(pump_calibration);
+          int duration = (int)(target_ml / pump_ml_per_sec);
+          
+          ESP_LOGI("watering", "📊 Ziel: %dml, Pumpe: %.1fml/s → %ds Laufzeit, Schwelle: %.2fV", 
+                   target_ml, pump_ml_per_sec, duration, threshold);
+          
+          bool watered = false;
+          
+          // ═══════════════════════════════════════════════
+          // Topf 1 prüfen
+          // ═══════════════════════════════════════════════
+          float h1 = id(feuchtigkeit1).state;
+          ESP_LOGI("watering", "🌱 Topf 1: Sensor = %.3fV", h1);
+          
+          if (isnan(h1)) {
+            ESP_LOGW("watering", "⚠️ Topf 1: Sensor defekt/nicht verfügbar - gieße trotzdem!");
+            id(pumpe1_on).execute(duration);
+            watered = true;
+          } else if (h1 < threshold) {
+            ESP_LOGI("watering", "💧 Topf 1: %.3fV < %.2fV → Gieße %dml", h1, threshold, target_ml);
+            id(pumpe1_on).execute(duration);
+            watered = true;
+          } else {
+            ESP_LOGI("watering", "✅ Topf 1: %.3fV ≥ %.2fV - noch feucht genug, überspringe", h1, threshold);
+          }
+          
+          // ═══════════════════════════════════════════════
+          // Topf 2 prüfen
+          // ═══════════════════════════════════════════════
+          float h2 = id(feuchtigkeit2).state;
+          ESP_LOGI("watering", "🌱 Topf 2: Sensor = %.3fV", h2);
+          
+          if (isnan(h2)) {
+            ESP_LOGW("watering", "⚠️ Topf 2: Sensor defekt/nicht verfügbar - gieße trotzdem!");
+            id(pumpe2_on).execute(duration);
+            watered = true;
+          } else if (h2 < threshold) {
+            ESP_LOGI("watering", "💧 Topf 2: %.3fV < %.2fV → Gieße %dml", h2, threshold, target_ml);
+            id(pumpe2_on).execute(duration);
+            watered = true;
+          } else {
+            ESP_LOGI("watering", "✅ Topf 2: %.3fV ≥ %.2fV - noch feucht genug, überspringe", h2, threshold);
+          }
+          
+          // Letzten Bewässerungstag speichern
+          if (watered) {
+            id(last_watering_day) = day;
+            ESP_LOGI("watering", "✅ Bewässerung abgeschlossen (Tag %d gespeichert)", day);
+          } else {
+            ESP_LOGI("watering", "ℹ️ Keine Bewässerung nötig - alle Töpfe noch feucht");
+          }
+          
+          ESP_LOGI("watering", "═══════════════════════════════════════════════");
+
+  # Pumpen-Steuerung mit Sicherheitsprüfung
+  - id: pumpe1_on
+    mode: restart
+    parameters:
+      duration: int
+    then:
+      - if:
+          condition:
+            binary_sensor.is_on: wasserstand
+          then:
+            - logger.log:
+                format: "💧 Pumpe 1 EIN für %d Sekunden"
+                args: ['duration']
+            - switch.turn_on: pumpe1
+            - delay: !lambda "return duration * 1000;"
+            - switch.turn_off: pumpe1
+            - logger.log: "✅ Pumpe 1 AUS"
+          else:
+            - logger.log:
+                format: "🚨 Pumpe 1 BLOCKIERT - Kein Wasser im Tank!"
+                level: ERROR
+
+  - id: pumpe2_on
+    mode: restart
+    parameters:
+      duration: int
+    then:
+      - if:
+          condition:
+            binary_sensor.is_on: wasserstand
+          then:
+            - logger.log:
+                format: "💧 Pumpe 2 EIN für %d Sekunden"
+                args: ['duration']
+            - switch.turn_on: pumpe2
+            - delay: !lambda "return duration * 1000;"
+            - switch.turn_off: pumpe2
+            - logger.log: "✅ Pumpe 2 AUS"
+          else:
+            - logger.log:
+                format: "🚨 Pumpe 2 BLOCKIERT - Kein Wasser im Tank!"
+                level: ERROR
+
+###############################################################################
+# INTERVALLE
+###############################################################################
+
+interval:
+  # Regelmäßiges Update der Wachstumsphase (alle 6 Stunden)
+  - interval: 6h
+    then:
+      - script.execute: update_grow_phase
