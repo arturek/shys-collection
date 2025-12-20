@@ -378,7 +378,9 @@ binary_sensor:
         # Wenn im Notaus-Modus: Automatisch zurück zu Auto
         - if:
             condition:
-              lambda: return id(betriebsmodus).current_option() == "Notaus";
+              lambda: |-
+                std::string mode = id(betriebsmodus).current_option();
+                return mode == "Notaus";
             then:
               - select.set:
                   id: betriebsmodus
@@ -760,7 +762,9 @@ script:
           condition:
             and:
               - binary_sensor.is_on: wasserstand
-              - lambda: return id(betriebsmodus).current_option() != "Notaus";
+              - lambda: |-
+                  std::string mode = id(betriebsmodus).current_option();
+                  return mode != "Notaus";
           then:
             - script.execute:
                 id: interlock_off
@@ -785,7 +789,9 @@ script:
           condition:
             and:
               - binary_sensor.is_on: wasserstand
-              - lambda: return id(betriebsmodus).current_option() != "Notaus";
+              - lambda: |-
+                  std::string mode = id(betriebsmodus).current_option();
+                  return mode != "Notaus";
           then:
             - script.execute:
                 id: interlock_off
@@ -810,7 +816,9 @@ script:
           condition:
             and:
               - binary_sensor.is_on: wasserstand
-              - lambda: return id(betriebsmodus).current_option() != "Notaus";
+              - lambda: |-
+                  std::string mode = id(betriebsmodus).current_option();
+                  return mode != "Notaus";
           then:
             - script.execute:
                 id: interlock_off
@@ -835,7 +843,9 @@ script:
           condition:
             and:
               - binary_sensor.is_on: wasserstand
-              - lambda: return id(betriebsmodus).current_option() != "Notaus";
+              - lambda: |-
+                  std::string mode = id(betriebsmodus).current_option();
+                  return mode != "Notaus";
           then:
             - script.execute:
                 id: interlock_off
