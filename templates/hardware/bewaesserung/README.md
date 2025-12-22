@@ -22,22 +22,31 @@ Das Bewässerungssystem nutzt einen ESP8266 ESP-01 (1MB) mit ESPHome in Kombinat
 
 ### Sensoren
 
-Das System nutzt **4 Bodenfeuchtesensoren**:
+Das System nutzt **4 Bodenfeuchtesensoren** über einen **ADS1115** 16-Bit ADC:
 
-- **Messbereich:** 0-6V
+- **Hardware:**
+  - Anschluss über ADS1115 (4x Analog Input)
+  - **Jumper J6** zur Spannungswahl:
+    - **Pin 1-2**: Sensoren mit **3.3V** versorgen
+    - **Pin 2-3**: Sensoren mit **5V** versorgen (Standard)
+  - **Messbereich:** 0-3.3V oder 0-5V (abhängig von Jumper J6)
+  - ADS1115 Gain: 6.144V (unterstützt beide Modi)
+  
 - **Funktionsweise:** Abhängig vom verwendeten Sensor-Typ
   - **Kapazitive Sensoren** (empfohlen): Hoher Wert = Trocken, niedriger Wert = Feucht
   - **Resistive Sensoren**: Niedriger Wert = Trocken, hoher Wert = Feucht
   - Die Bewässerungslogik ist für **kapazitive Sensoren** optimiert
-- **Update-Intervall:** Konfigurierbar (Standard: 10 Sekunden)
-- **Filter:** Gleitender Durchschnitt über 5 Messwerte für stabile Werte
-- **Schwellwerte:** Individuell pro Sensor über Home Assistant einstellbar
+  
+- **Konfiguration:**
+  - **Update-Intervall:** Konfigurierbar (Standard: 10 Sekunden)
+  - **Filter:** Gleitender Durchschnitt über 5 Messwerte für stabile Werte
+  - **Schwellwerte:** Individuell pro Sensor über Home Assistant einstellbar
 
-> **Hinweis:** Die Beispielwerte in dieser Anleitung (z.B. 2V = trocken, 0,6V = feucht) gelten für kapazitive Sensoren und können je nach Sensor-Modell abweichen. Eine Kalibrierung ist immer erforderlich!
+> **Hinweis:** Die Beispielwerte in dieser Anleitung (z.B. 2V = trocken, 0,6V = feucht) gelten für kapazitive Sensoren mit 5V Versorgung und können je nach Sensor-Modell und Jumper-Stellung abweichen. Eine Kalibrierung ist immer ratsam!
 
 ### Pumpen
 
-Das System steuert **4 Tauchpumpen (12V)** mit diversen Sicherheitsfunktionen:
+Das System steuert **4 Tauchpumpen (5V)** mit diversen Sicherheitsfunktionen:
 
 - **Automatischer Schutz:**
   - Pumpen starten nur bei ausreichend Wasser im Tank
@@ -124,10 +133,10 @@ Alle wichtigen Parameter können über Home Assistant angepasst werden:
 
 - ESPHome installiert (über Home Assistant Add-on oder standalone)
 - Fertige Platine aus dem Projekt oder selbst aufgebaut nach Schaltplan
-- 12V Netzteil für Pumpen
+- 5V Netzteil für Pumpen (auch Solar-PCB kompatibel)
 - Wassertank mit Schwimmer-Sensor
 - 4x Kapazitive Bodenfeuchtesensoren
-- 4x Tauchpumpen (12V)
+- 4x Tauchpumpen (5V)
 - Schläuche und Verbindungen
 
 ### Konfiguration
@@ -230,6 +239,12 @@ Die Pin-Belegung ist für die Projekt-PCB vorkonfiguriert und sollte **nicht** g
 - GPIO Expander (MCP23017): 0x20
 - Analog-Digital-Wandler (ADS1115): 0x48
 
+**Jumper J6 (Sensor-Spannungswahl):**
+- **Pin 1-2:** Sensoren mit **3.3V** versorgen
+- **Pin 2-3 (Standard):** Sensoren mit **5V** versorgen
+
+> ℹ️ **Hinweis:** Die meisten kapazitiven Sensoren arbeiten mit 5V. Wähle 3.3V nur wenn deine Sensoren dies explizit benötigen. Die Beispiel-Schwellwerte in dieser Anleitung gelten für 5V-Betrieb!
+
 ### Sensor-Kalibrierung
 
 **Wichtig:** Die Schwellwerte müssen an eure Sensoren angepasst werden!
@@ -287,7 +302,7 @@ Die Pin-Belegung ist für die Projekt-PCB vorkonfiguriert und sollte **nicht** g
 
 - 4x [Kapazitive Bodenfeuchtesensoren](https://amzn.to/3C9abcd)
 
-- 4x [12V Tauchpumpen](https://amzn.to/4A1efgh)
+- 4x [5V Tauchpumpen](https://amzn.to/4A1efgh)
 
 - 1x [Schwimmer-Sensor (Wassertank)](https://amzn.to/3B2ijkl)
 
@@ -297,7 +312,7 @@ Die Pin-Belegung ist für die Projekt-PCB vorkonfiguriert und sollte **nicht** g
 
 - 2x 100nF Kondensatoren (1206 SMD)
 
-- 1x NCP1117-33_SOT223 (12V IN / 3.3V OUT)
+- 1x NCP1117-33_SOT223 (5V IN / 3.3V OUT)
 
 - [Pinheader 2.54mm](https://amzn.to/4o8oaGz)
 

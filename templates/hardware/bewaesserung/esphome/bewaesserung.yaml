@@ -128,15 +128,35 @@ logger:
 api:
   encryption:
     key: ${api_encryption_key}
+  # ⚠️ WICHTIG für autonomen Betrieb (ohne Home Assistant):
+  # Wenn die API nicht mit einem Client verbunden werden soll, 
+  # muss der reboot_timeout auf 0s gesetzt werden, sonst startet 
+  # das Gerät nach 15min automatisch neu!
+  # Für autonomen Betrieb auskommentieren:
+  # reboot_timeout: 0s
 
 ota:
   - platform: esphome
     password: ${ota_password}
+
+# ⚠️ OPTIONAL: Web-Interface für autonomen Betrieb
+# Ermöglicht lokalen Zugriff auf Sensoren/Schalter ohne Home Assistant
+# Auskommentieren um Web-Interface zu aktivieren:
+# web_server:
+#   port: 80
+#   # Auth ist optional - für ungeschützten Zugriff weglassen:
+#   auth:
+#     username: admin
+#     password: !secret web_server_password  # In secrets.yaml definieren
   
 wifi:
   ssid: ${wifi_ssid}
   password: ${wifi_password}
   min_auth_mode: WPA2
+  # ⚠️ WICHTIG für autonomen Betrieb (ohne WiFi):
+  # Wenn kein WiFi verfügbar ist, startet das Gerät nach 15min neu.
+  # Für Betrieb ohne WiFi (nur Access Point) auskommentieren:
+  # reboot_timeout: 0s
 
   ap:
     ssid: ${ap_ssid}
@@ -276,8 +296,16 @@ switch:
 # 0.256	  ±6.144 V	          250
 
 sensor:
-  # Bodenfeuchtesensoren (ADS1115 Analog Inputs)
-  # Gain 6.144 = ±6.144V Messbereich
+  # ═══════════════════════════════════════════════════════════════════════
+  # Bodenfeuchtesensoren (ADS1115 4x 16-Bit Analog Inputs)
+  # ═══════════════════════════════════════════════════════════════════════
+  # Gain 6.144 = ±6.144V Messbereich (unterstützt 3.3V und 5V Sensoren)
+  # 
+  # ⚙️ WICHTIG: Jumper J6 auf der PCB (Sensor-Spannungswahl):
+  #    - Pin 1-2: Sensoren mit 3.3V versorgen → Messbereich 0-3.3V
+  #    - Pin 2-3 (Standard): Sensoren mit 5V versorgen → Messbereich 0-5V
+  # ═══════════════════════════════════════════════════════════════════════
+  
   - platform: ads1115
     ads1115_id: ads1
     gain: 6.144

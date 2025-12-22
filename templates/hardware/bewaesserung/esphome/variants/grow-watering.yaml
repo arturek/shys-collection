@@ -6,7 +6,7 @@
 #  - ESP8266 ESP-01 (1MB)                                                     #
 #  - MCP23017 I²C Port Expander (16x GPIO)                                    #
 #  - ADS1115 I²C ADC (4x Analog Input)                                        #
-#  - 2x Tauchpumpen (12V über MOSFET)                                         #
+#  - 2x Tauchpumpen (5V über MOSFET)                                         #
 #  - 2x Kapazitive Bodenfeuchtesensoren (mit Poti-Modul)                      #
 #  - 1x Schwimmer-Sensor (Wassertank)                                         #
 #                                                                             #
