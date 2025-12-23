@@ -289,20 +289,22 @@ Die Pin-Belegung ist für die Projekt-PCB vorkonfiguriert und sollte **nicht** g
 ---
 
 ## Verwendete Bauteile
+Ich verlinke hier über Amazon (Affiliate Links).
+Empfehle aber bzgl Preis für die Kleinteile mal gegen Reichelt, Mouser, Pollin oä. zu vergleichen. 
 
 **Elektronik:**
 
-- 1x [ESP-01 (ESP8266 mit 1MB Flash)](https://amzn.to/4px21mF)
+- 1x [ESP-12E oder F (ESP8266)](https://amzn.to/4patx8L)
 
-- 1x [MCP23017 I²C GPIO Expander (16x GPIO)](https://amzn.to/3D1234a)
+- 1x [MCP23017 I²C GPIO Expander (16x GPIO)](https://amzn.to/4jcsLqj)
 
-- 1x [ADS1115 I²C ADC (4x Analog Input)](https://amzn.to/3D5678b)
+- 1x [ADS1115 I²C ADC (4x Analog Input)](https://amzn.to/497Zats)
 
-- 4x [IRLZ34N oder IRLZ44N (N-MOSFET)](https://amzn.to/48bMdP7)
+- 4x [AO3400 (MOSFET)](https://amzn.to/3MS4ytt)
 
-- 4x [Kapazitive Bodenfeuchtesensoren](https://amzn.to/3C9abcd)
+- 4x [Kapazitive Bodenfeuchtesensoren](https://amzn.to/4sbOp21)
 
-- 4x [5V Tauchpumpen](https://amzn.to/4A1efgh)
+- 4x [5V Tauchpumpen](https://amzn.to/45nPDgO)
 
 - 1x [Schwimmer-Sensor (Wassertank)](https://amzn.to/3B2ijkl)
 
@@ -310,13 +312,17 @@ Die Pin-Belegung ist für die Projekt-PCB vorkonfiguriert und sollte **nicht** g
 
 - 4x SMD Widerstände 2,2k (1206 SMD) für LEDs
 
-- 2x 100nF Kondensatoren (1206 SMD)
+- 4x 1N4007 Diode (1206 SMD)
 
-- 1x NCP1117-33_SOT223 (5V IN / 3.3V OUT)
+- 4x 100nF Kondensatoren (1206 SMD)
+
+- 2x 10uF Kondensatoren (1206 SMD)
+
+- 1x [NCP1117-33_SOT223 5V IN / 3.3V OUT](https://amzn.to/4saMpat)
 
 - [Pinheader 2.54mm](https://amzn.to/4o8oaGz)
 
-- [Terminal Blocks für Anschlüsse](https://amzn.to/4pwMoeV)
+- [Terminal Blocks für Anschlüsse](https://amzn.to/3LbX04h)
 
 **Mechanik:**
 
