@@ -1,6 +1,7 @@
 esphome:
-  name: hue_ambiance_clone_d1mini
-  platform: ESP8266
+  name: shys-ambiance-clone
+
+esp8266:
   board: d1_mini
 
 wifi:
@@ -22,10 +23,12 @@ logger:
 
 # Enable Home Assistant API
 api:
-  password: YOUR_API_PASSWORD
+  encryption:
+    key: !secret api_encryption_key
 
 ota:
-  password: YOUR_OTA_PASSWORD
+  platform: esphome
+  password: !secret ota_password
 
 
 globals:
@@ -94,12 +97,12 @@ binary_sensor:
                     return id(colorsBlue)[id(currentColor)];
 
 light:
-  - platform: fastled_clockless
-    chipset: WS2812B
+  - platform: neopixelbus
+    variant: WS2812
+    type: GRB
     pin: D3
     num_leds: 30
     default_transition_length: 3s
-    rgb_order: GRB
     name: "Hue Ambiance LED Lights"
     id: hue_ambiance_clone_d1
     

@@ -36,6 +36,16 @@ binary_sensor:
       then:
         - script.execute: changeMode
 
+globals:
+  - id: effect
+    type: int
+    restore_value: no
+    initial_value: '0'
+  - id: effects
+    type: std::vector<std::string>
+    restore_value: no
+    initial_value: '{"Green","Blue","Purple","Red","Slow Random","Fast Random","Flicker""Slow Pulse","Strobe"}'
+
 light:
   - platform: rgbw
     id: my_light

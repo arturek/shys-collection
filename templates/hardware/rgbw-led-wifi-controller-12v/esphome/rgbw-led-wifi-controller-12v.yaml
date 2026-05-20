@@ -1,6 +1,7 @@
 esphome:
   name: rgb_youtube
-  platform: ESP8266
+
+esp8266:
   board: nodemcuv2
 
 wifi:
@@ -15,12 +16,14 @@ captive_portal:
 logger:
 
 api:
-  password: !secret HA_API_Password
+  encryption:
+    key: !secret api_encryption_key
 ota:
+  platform: esphome
   password: !secret HA_OTA_Password
 
 light:
-  - platform: rgb
+  - platform: rgbw
     name: "SmartHome yourself RGB"
     red: rgb_shys_1
     green: rgb_shys_2

@@ -1,11 +1,12 @@
 esphome:
   name: rgb_youtube
-  platform: ESP8266
+
+esp8266:
   board: nodemcuv2
 
 wifi:
-  ssid: !secret WLanSSID
-  password: !secret WLanPassword
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
 
   ap:
     ssid: "RGB Buero"
@@ -15,9 +16,11 @@ captive_portal:
 logger:
 
 api:
-  password: !secret HA_API_Password
+  encryption:
+    key: !secret api_encryption_key
 ota:
-  password: !secret HA_OTA_Password
+  platform: esphome
+  password: !secret ota_password
 
 light:
   - platform: rgb

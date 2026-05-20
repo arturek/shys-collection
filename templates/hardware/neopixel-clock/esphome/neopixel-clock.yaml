@@ -20,3 +20,7 @@ substitutions:
 # Neopixel-Uhr als Package laden
 packages:
   neopixel_uhr_package: github://SmartHome-yourself/esphome-neopixel-uhr/neopixel-uhr.yaml@main
+
+ota:
+  platform: esphome
+  password: !secret ota_password
