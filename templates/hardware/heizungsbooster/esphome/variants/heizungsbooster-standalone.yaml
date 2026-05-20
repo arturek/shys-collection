@@ -277,7 +277,7 @@ script:
     then:
       - lambda: |-
           // Nur im MANUAL-Modus anwenden
-          std::string mode = id(fan_mode).state;
+          std::string mode = id(fan_mode).current_option();
           if (mode != "manual") {
             return;
           }
@@ -298,7 +298,7 @@ script:
   - id: switch_mode
     then:
       - lambda: |-
-          std::string current_mode = id(fan_mode).state;
+          std::string current_mode = id(fan_mode).current_option();
           std::string new_mode;
 
           if (current_mode == "off") {
@@ -318,7 +318,7 @@ script:
     then:
       - lambda: |-
           // Nur im MANUAL-Modus aktiv
-          std::string mode = id(fan_mode).state;
+          std::string mode = id(fan_mode).current_option();
           if (mode != "manual") {
             return;
           }
@@ -349,7 +349,7 @@ script:
     then:
       - lambda: |-
           // Nur im AUTO-Modus ausführen
-          std::string mode = id(fan_mode).state;
+          std::string mode = id(fan_mode).current_option();
           if (mode != "auto") {
             return;
           }
