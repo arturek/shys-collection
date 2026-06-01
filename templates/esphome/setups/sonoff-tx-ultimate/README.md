@@ -44,7 +44,7 @@ substitutions:
   relay_count: "2"
 
 packages:
-  smarthomeyourself.tx-ultimate: github://SmartHome-yourself/sonoff-tx-ultimate-for-esphome/tx_ultimate.yaml@main
+  smarthomeyourself.tx-ultimate: github://SmartHome-yourself/shys-collection/templates/esphome/setups/sonoff-tx-ultimate/tx_ultimate.yaml@main
   
 esphome:
   name: ${name}
@@ -67,7 +67,7 @@ wifi:
 &nbsp;  
   
 ## Lokale Verwendung in ESPHome
-Sie können Ihr Projekt selbst erstellen, ohne meine Pakete zu verwenden, indem Sie die [tx_ultimate_local.yaml](https://github.com/SmartHome-yourself/sonoff-tx-ultimate-for-esphome/blob/main/tx_ultimate_local.yaml) in Ihr Projekt kopieren.  
+Sie können Ihr Projekt selbst erstellen, ohne meine Pakete zu verwenden, indem Sie die [tx_ult_local.yaml](https://github.com/SmartHome-yourself/shys-collection/blob/main/templates/esphome/setups/sonoff-tx-ultimate/variants/tx_ult_local.yaml) in Ihr Projekt kopieren.  
 Wenn Sie die benutzerdefinierte Komponente lokal verwenden möchten, können Sie den [tx_ultimate_touch-Ordner](https://github.com/SmartHome-yourself/sonoff-tx-ultimate-for-esphome/tree/main/components/) in Ihr ESPHome-Verzeichnis oder einen Unterordner kopieren und lokal einbinden.
 Dann müssen Sie nur noch die Quelle des external_components-Eintrags ändern.
 
@@ -103,8 +103,8 @@ substitutions:
   
 packages:
   smarthomeyourself.tx-ultimate:
-    url: https://github.com/SmartHome-yourself/sonoff-tx-ultimate-for-esphome
-    file: tx_ultimate_cover.yaml
+    url: https://github.com/SmartHome-yourself/shys-collection
+    file: templates/esphome/setups/sonoff-tx-ultimate/variants/tx_ult_cover.yaml
     ref: main
   
 esphome:
@@ -132,7 +132,24 @@ wifi:
 Alle Ersetzungen sind optional, aber ich empfehle, mindestens `name`, `friendly_name` und `relay_count` anzugeben.  
 Die Pins sind bereits in der Hardware angegeben und müssen daher nicht geändert werden.  
 
-## Standard-Konfiguration (tx_ultimate.yaml / tx_ultimate_local.yaml)
+## Paket-Varianten (Kurznamen)
+
+| Datei | Standard `name` | Standard `friendly_name` |
+|---|---|---|
+| `tx_ultimate.yaml` | `shys-tx-ultimate` | TX Ultimate |
+| `variants/tx_ult_us.yaml` | `shys-txult-us` | TX Ultimate US |
+| `variants/tx_ult_cover.yaml` | `shys-txult-cover` | TX Ultimate Cover |
+| `variants/tx_ult_cover_us.yaml` | `shys-txult-cover-us` | TX Ultimate Cover US |
+| `variants/tx_ult_local.yaml` | `shys-txult-local` | TX Ultimate Local |
+| `variants/tx_ult_local_us.yaml` | `shys-txult-local-us` | TX Ultimate Local US |
+| `variants/tx_ult_cover_2xsw_us.yaml` | `shys-txult-cover-2xsw-us` | TX Ultimate Cover + 2 Switches US |
+| `variants/tx_ult_2xcov_us.yaml` | `shys-txult-2xcov-us` | TX Ultimate 2 Covers US |
+
+Die Custom Component liegt im Repo [sonoff-tx-ultimate-for-esphome](https://github.com/SmartHome-yourself/sonoff-tx-ultimate-for-esphome).
+
+&nbsp;
+
+## Standard-Konfiguration (tx_ultimate.yaml / tx_ult_local.yaml)
 ```
 substitutions:
   name: "shys-tx-ultimate"
@@ -200,7 +217,7 @@ substitutions:
 ```
   
   
-## Cover-Konfiguration (tx_ultimate_cover.yaml)
+## Cover-Konfiguration (tx_ult_cover.yaml)
 Bei der Jalousie weichen die Parameter etwas ab.
 
 ```

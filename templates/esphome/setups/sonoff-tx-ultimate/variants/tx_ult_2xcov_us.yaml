@@ -1,6 +1,6 @@
 substitutions:
-  name: "shys-tx-ultimate-2x-cover"
-  friendly_name: "TX Ultimate 2x Cover"
+  name: "shys-txult-2xcov-us"
+  friendly_name: "TX Ultimate 2 Covers US"
 
   relay_count: "4" # Needs at least 4 relays
 
@@ -44,7 +44,7 @@ substitutions:
 
   long_press_brightness: "1"
   long_press_color: "{100,0,0}"
-  long_press_effect: ""
+  long_press_effect: "Scan"
 
   multi_touch_brightness: "1"
   multi_touch_color: "{0,0,0}"
@@ -82,7 +82,7 @@ esphome:
   name: ${name}
   friendly_name: ${friendly_name}
   project:
-    name: smarthomeyourself.tx_ultimate_2x_cover
+    name: smarthomeyourself.tx_ult_2xcov_us
     version: "1.0"
     
   on_boot:
@@ -140,16 +140,16 @@ esphome:
       - light.turn_on:
           id: leds_left
           brightness: !lambda "return id(nightlight).state?${nightlight_brightness}:${cover_1_brightness};"
-          effect: "Cover Position 1"
+          effect: "Cover Position"
       - light.turn_on:
           id: leds_right
           brightness: !lambda "return id(nightlight).state?${nightlight_brightness}:${cover_2_brightness};"
-          effect: "Cover Position 2"
+          effect: "Cover Position"
 
 esp32:
   board: esp32dev
   framework:
-    type: arduino
+    type: esp-idf
 
 logger:
   #  hardware_uart: UART2
@@ -163,7 +163,7 @@ logger:
     uart_debug: INFO
 
 dashboard_import:
-  package_import_url: github://SmartHome-yourself/sonoff-tx-ultimate-for-esphome/variants/tx_ultimate_2x_cover.yaml@main
+  package_import_url: github://SmartHome-yourself/shys-collection/templates/esphome/setups/sonoff-tx-ultimate/variants/tx_ult_2xcov_us.yaml@main
   import_full_config: false
 
 api:
@@ -439,14 +439,14 @@ switch:
     name: "${friendly_name} Restart"
 
 light:
-  - platform: neopixelbus
-    type: GRB
-    variant: WS2811
+  - platform: esp32_rmt_led_strip
+    chipset: WS2811
+    rgb_order: GRB
     pin: ${led_pin}
-    num_leds: 28
+    num_leds: 32
     name: "NeoPixel Light"
     id: leds
-    default_transition_length: 0s
+    default_transition_length: 0.7s
     effects:
       - addressable_rainbow:
           name: "Rainbow"
@@ -467,24 +467,27 @@ light:
     internal: true
     segments:
       - id: leds
-        from: 7
-        to: 7
+        from: 9
+        to: 14
   - platform: partition
     name: "LEDs Button middle"
     id: leds_button_middle
     internal: true
     segments:
       - id: leds
-        from: 9
-        to: 9
+        from: 2
+        to: 5
+      - id: leds
+        from: 18
+        to: 21
   - platform: partition
     name: "LEDs Button left"
     id: leds_button_left
     internal: true
     segments:
       - id: leds
-        from: 11
-        to: 11
+        from: 25
+        to: 30
 
   - platform: partition
     name: "LEDs Nightlight"
@@ -492,17 +495,8 @@ light:
     internal: true
     segments:
       - id: leds
-        from: 8
-        to: 8
-      - id: leds
-        from: 10
-        to: 10
-      - id: leds
-        from: 12
-        to: 19
-      - id: leds_top
         from: 0
-        to: 6
+        to: 31
 
   - platform: partition
     name: "LEDs Top"
@@ -510,8 +504,11 @@ light:
     internal: true
     segments:
       - id: leds
-        from: 20
-        to: 26
+        from: 31
+        to: 31
+      - id: leds
+        from: 0
+        to: 8
     effects:
       - addressable_scan:
           name: "Scan"
@@ -526,15 +523,15 @@ light:
     internal: true
     segments:
       - id: leds
-        from: 13
-        to: 19
+        from: 25
+        to: 30
     effects:
       - pulse:
           name: "Pulse"
           transition_length: 600ms
           update_interval: 300ms
       - addressable_lambda:
-          name: "Cover Position 1"
+          name: "Cover Position"
           update_interval: 500ms
           lambda: |-
             int16_t pos = (int16_t)round(id(my_cover_1).position * 7);
@@ -549,18 +546,15 @@ light:
     internal: true
     segments:
       - id: leds
-        from: 27
-        to: 27
-      - id: leds
-        from: 0
-        to: 5
+        from: 9
+        to: 14
     effects:
       - pulse:
           name: "Pulse"
           transition_length: 600ms
           update_interval: 300ms
       - addressable_lambda:
-          name: "Cover Position 2"
+          name: "Cover Position"
           update_interval: 500ms
           lambda: |-
             int16_t pos = (int16_t)round(id(my_cover_2).position * 7);
@@ -569,20 +563,19 @@ light:
               it.range(0, 7-pos) = esphome::Color(id(cover_2_color2)[0],id(cover_2_color2)[1],id(cover_2_color2)[2]);
             }
 
-media_player:
-  - platform: i2s_audio
-    id: media_out
-    name: ${friendly_name} Player
-    dac_type: external
-    i2s_dout_pin: ${audio_sdata_pin}
-    i2s_audio_id: audio_i2s
-    i2s_comm_fmt: lsb
-    mode: mono
-
 i2s_audio:
   id: audio_i2s
   i2s_lrclk_pin: ${audio_lrclk_pin}
   i2s_bclk_pin: ${audio_bclk_pin}
+
+speaker:
+  - platform: i2s_audio
+    id: media_out
+    dac_type: external
+    i2s_dout_pin: ${audio_sdata_pin}
+    i2s_audio_id: audio_i2s
+    i2s_comm_fmt: i2s_lsb
+    channel: mono
 
 uart:
   tx_pin: ${uart_tx_pin}
@@ -692,7 +685,7 @@ cover:
       - light.turn_on:
           id: leds_left
           brightness: !lambda "return id(nightlight).state?${nightlight_brightness}:${cover_1_brightness};"
-          effect: "Cover Position 1"
+          effect: "Cover Position"
       - script.execute: open_cover_1
     open_duration: ${cover_1_open_duration}
 
@@ -700,7 +693,7 @@ cover:
       - light.turn_on:
           id: leds_left
           brightness: !lambda "return id(nightlight).state?${nightlight_brightness}:${cover_1_brightness};"
-          effect: "Cover Position 1"
+          effect: "Cover Position"
       - script.execute: close_cover_1
     close_duration: ${cover_1_close_duration}
 
@@ -716,7 +709,7 @@ cover:
       - light.turn_on:
           id: leds_right
           brightness: !lambda "return id(nightlight).state?${nightlight_brightness}:${cover_2_brightness};"
-          effect: "Cover Position 2"
+          effect: "Cover Position"
       - script.execute: open_cover_2
     open_duration: ${cover_2_open_duration}
 
@@ -724,7 +717,7 @@ cover:
       - light.turn_on:
           id: leds_right
           brightness: !lambda "return id(nightlight).state?${nightlight_brightness}:${cover_2_brightness};"
-          effect: "Cover Position 2"
+          effect: "Cover Position"
       - script.execute: close_cover_2
     close_duration: ${cover_2_close_duration}
 
@@ -791,6 +784,9 @@ script:
             - light.turn_on: 
                 id: leds_top
                 brightness: ${nightlight_brightness}
+                red: !lambda "return id(nightlight_color)[0]/100.0;"
+                green: !lambda "return id(nightlight_color)[1]/100.0;"
+                blue: !lambda "return id(nightlight_color)[2]/100.0;"
                 effect: "None"
             - script.execute: led_on_nightlight
           else:
@@ -808,7 +804,15 @@ script:
 
       - if:
           condition:
-            lambda: "return (id(relay_2).state) ;"
+            lambda: "return (${relay_count}>=3 && id(relay_3).state);"
+          then:
+            - script.execute: led_on_button_middle
+          else:
+            - script.execute: led_off_button_middle
+      
+      - if:
+          condition:
+            lambda: "return (${relay_count}==4 && id(relay_4).state);"
           then:
             - script.execute: led_on_button_middle
           else:
@@ -816,7 +820,7 @@ script:
 
       - if:
           condition:
-            lambda: "return (id(relay_3).state || id(relay_4).state) ;"
+            lambda: "return id(relay_2).state;"
           then:
             - script.execute: led_on_button_right
           else:
@@ -962,10 +966,10 @@ script:
       - delay: 2.4s
       - light.turn_on:
           id: leds_right
-          effect: "Cover Position 2"
+          effect: "Cover Position"
       - light.turn_on:
           id: leds_left
-          effect: "Cover Position 1"
+          effect: "Cover Position"
 
   - id: led_on_full_touch
     mode: restart
@@ -996,6 +1000,57 @@ script:
     then:
       - if:
           condition:
+            lambda: "return ${relay_count}==1;"
+          then:
+            - binary_sensor.template.publish:
+                id: touchfield_1
+                state: ON
+
+      - if:
+          condition:
+            lambda: "return ${relay_count}==2;"
+          then:
+            - if:
+                condition:
+                  lambda: "return pos <= 5;"
+                then:
+                  - binary_sensor.template.publish:
+                      id: touchfield_1
+                      state: ON
+
+                else:
+                  - binary_sensor.template.publish:
+                      id: touchfield_2
+                      state: ON
+
+      - if:
+          condition:
+            lambda: "return ${relay_count}==3;"
+          then:
+            - if:
+                condition:
+                  lambda: "return pos <= 3;"
+                then:
+                  - binary_sensor.template.publish:
+                      id: touchfield_1
+                      state: ON
+
+                else:
+                  - if:
+                      condition:
+                        lambda: "return pos <= 7;"
+                      then:
+                        - binary_sensor.template.publish:
+                            id: touchfield_2
+                            state: ON
+
+                      else:
+                        - binary_sensor.template.publish:
+                            id: touchfield_3
+                            state: ON
+
+      - if:
+          condition:
             lambda: "return ${relay_count}==4;"
           then:
             - if:
@@ -1023,7 +1078,7 @@ script:
                               - binary_sensor.template.publish:
                                   id: touchfield_3
                                   state: ON
-                          
+                            
                             else:
                               - binary_sensor.template.publish:
                                   id: touchfield_4
@@ -1068,4 +1123,3 @@ script:
           } else {
             id(my_cover_2).make_call().set_command_stop().perform();
           }
-
