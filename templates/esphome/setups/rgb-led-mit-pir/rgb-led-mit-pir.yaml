@@ -1,8 +1,8 @@
 esphome:
   name: rgb-led-mit-pir
-  platform: ESP8266
-  board: nodemcuv2
 
+esp8266:
+  board: nodemcuv2
 
 wifi:
   ssid: !secret WLanSSID
@@ -76,14 +76,13 @@ switch:
 # Wenn also das Licht eingeschaltet wurde, aber in den 2 Minuten delay erneut eine Bewegung erkannt wird, 
 # wird das Script abgebrochen und neu gestartet, wodurch die 2 Minuten Wartezeit erneut beginnen
 script:
-- id: switch_rgb_led_script
-  mode: restart
-  
-  then:
-    - light.turn_on: rgb_led
-    - delay: 2min
-    - if:
-        condition:
-          switch.is_off: leds_daueran
-        then:
-          - light.turn_off: rgb_led
+  - id: switch_rgb_led_script
+    mode: restart
+    then:
+      - light.turn_on: rgb_led
+      - delay: 2min
+      - if:
+          condition:
+            switch.is_off: leds_daueran
+          then:
+            - light.turn_off: rgb_led
