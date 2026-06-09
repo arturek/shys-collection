@@ -1,0 +1,76 @@
+substitutions:
+  name: "shys-m5-tough"
+  friendly_name: "M5 Tough"
+  m5_textsensor_id: "m5_textsensor_id"
+  wifi_ssid: !secret wifi_ssid
+  wifi_password: !secret wifi_password
+
+packages:
+  smarthomeyourself.m5_tough: 
+    url: https://github.com/SmartHome-yourself/m5-tough-touchmenu-for-esphome
+    file: shys-m5-tough-touchmenu.yaml
+ 
+dashboard_import:
+  package_import_url: github://SmartHome-yourself/shys-collection/tree/main/templates/esphome/setups/m5-tough/m5-tough.yaml@main
+  import_full_config: false
+
+binary_sensor:
+  - platform: template
+    name: "Motorrad-Garagentor Taster"
+    id: motorrad_tor_taster
+
+  - platform: template
+    name: "Carport-Tor Taster"
+    id: carport_tor_taster
+
+
+
+text_sensor:
+  - platform: shys_m5_tough
+    name: "Status"
+    id: m5_textsensor_id
+    init_sound: off
+    login_enabled: on
+
+    buttons:
+      - x: 10
+        y: 10
+        width: 220
+        height: 150
+        text: "Carport"
+
+      - x: 10
+        y: 160
+        width: 220
+        height: 150
+        text: "Garage"
+
+    on_value:
+      then:
+        - if:
+            condition:
+              - text_sensor.state:
+                  id: m5_textsensor_id
+                  state: "Button: Carport"
+            then:
+              - binary_sensor.template.publish:
+                  id: carport_tor_taster
+                  state: ON
+              - delay: 2s
+              - binary_sensor.template.publish:
+                  id: carport_tor_taster
+                  state: OFF
+
+        - if:
+            condition:
+              - text_sensor.state:
+                  id: m5_textsensor_id
+                  state: "Button: Garage"
+            then:
+              - binary_sensor.template.publish:
+                  id: motorrad_tor_taster
+                  state: ON
+              - delay: 2s
+              - binary_sensor.template.publish:
+                  id: motorrad_tor_taster
+                  state: OFF
