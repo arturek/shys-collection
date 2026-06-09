@@ -1,4 +1,4 @@
-# m5-tough-touchmenu-for-esphome  
+# M5 Tough - Touchmenü für ESPHome  
 Dieses Projekt bietet ein frei konfigurierbares Touch-Menü für das M5Stack Tough.  
 ![image](https://github.com/SmartHome-yourself/m5-tough-touchmenu-for-esphome/assets/705724/287fbc85-bf26-42ec-b6ef-de0167067412)
 
