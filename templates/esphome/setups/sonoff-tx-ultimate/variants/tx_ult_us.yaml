@@ -4,6 +4,11 @@ substitutions:
 
   relay_count: "2"
 
+  toggle_relay_1_on_touch: "true"
+  toggle_relay_2_on_touch: "true"
+  toggle_relay_3_on_touch: "true"
+  toggle_relay_4_on_touch: "true"
+
   vibra_time: 150ms
   button_on_time: 500ms
 
@@ -173,7 +178,11 @@ binary_sensor:
     name: "Touchfield 1"
     id: touchfield_1
     on_press:
-      - switch.toggle: relay_1
+      - if:
+          condition:
+            lambda: "return ${toggle_relay_1_on_touch};"
+          then:
+            - switch.toggle: relay_1
       - delay: ${button_on_time}
       - binary_sensor.template.publish:
           id: touchfield_1
@@ -184,7 +193,11 @@ binary_sensor:
     name: "Touchfield 2"
     id: touchfield_2
     on_press:
-      - switch.toggle: relay_2
+      - if:
+          condition:
+            lambda: "return ${toggle_relay_2_on_touch};"
+          then:
+            - switch.toggle: relay_2
       - delay: ${button_on_time}
       - binary_sensor.template.publish:
           id: touchfield_2
@@ -195,7 +208,11 @@ binary_sensor:
     name: "Touchfield 3"
     id: touchfield_3
     on_press:
-      - switch.toggle: relay_3
+      - if:
+          condition:
+            lambda: "return ${toggle_relay_3_on_touch};"
+          then:
+            - switch.toggle: relay_3
       - delay: ${button_on_time}
       - binary_sensor.template.publish:
           id: touchfield_3
@@ -206,7 +223,11 @@ binary_sensor:
     name: "Touchfield 4"
     id: touchfield_4
     on_press:
-      - switch.toggle: relay_4
+      - if:
+          condition:
+            lambda: "return ${toggle_relay_4_on_touch};"
+          then:
+            - switch.toggle: relay_4
       - delay: ${button_on_time}
       - binary_sensor.template.publish:
           id: touchfield_4

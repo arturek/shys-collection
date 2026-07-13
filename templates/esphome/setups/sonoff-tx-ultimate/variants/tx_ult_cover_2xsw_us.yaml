@@ -4,6 +4,9 @@ substitutions:
 
   relay_count: "4" # Needs at least 4 relays
 
+  toggle_relay_3_on_touch: "true"
+  toggle_relay_4_on_touch: "true"
+
   cover_name: "My Cover"
   cover_open_duration: 25s
   cover_close_duration: 25s
@@ -250,7 +253,11 @@ binary_sensor:
     name: "Touchfield 3"
     id: touchfield_3
     on_press:
-      - switch.toggle: relay_3
+      - if:
+          condition:
+            lambda: "return ${toggle_relay_3_on_touch};"
+          then:
+            - switch.toggle: relay_3
       - delay: ${button_on_time}
       - binary_sensor.template.publish:
           id: touchfield_3
@@ -261,7 +268,11 @@ binary_sensor:
     name: "Touchfield 4"
     id: touchfield_4
     on_press:
-      - switch.toggle: relay_4
+      - if:
+          condition:
+            lambda: "return ${toggle_relay_4_on_touch};"
+          then:
+            - switch.toggle: relay_4
       - delay: ${button_on_time}
       - binary_sensor.template.publish:
           id: touchfield_4
