@@ -1,5 +1,7 @@
 # SmartHomeYourself – Templates & Setups
 
+[English version](README_en.md)
+
 Kompakte Sammlung für **ESPHome**, **Hardware-Boards**, **Home Assistant** und **Node-RED**. 
 Fokus: **einfach**, **überschaubar**, **konsistente Ordner**. Optional gibt's einen Validator, GitHub Action und einen Pre‑commit Hook.
 
