@@ -100,6 +100,12 @@ esp32:
   board: esp32dev
   framework:
     type: esp-idf
+    sdkconfig_options:
+      # Increases the stack size for the main task (helps avoid overflows with custom code)
+      CONFIG_ESP_MAIN_TASK_STACK_SIZE: "8192"
+      # Optimizes memory allocation for audio buffers
+      CONFIG_MBEDTLS_DYNAMIC_FREE_CA_CERT: y
+      CONFIG_MBEDTLS_DYNAMIC_BUFFER: y
 
 logger:
 #  hardware_uart: UART2
@@ -113,7 +119,7 @@ logger:
     uart_debug: INFO
 
 dashboard_import:
-  package_import_url: github://SmartHome-yourself/shys-collection/templates/esphome/setups/sonoff-tx-ultimate/tx_ultimate.yaml@main
+  package_import_url: github://arturek/shys-collection/templates/esphome/setups/sonoff-tx-ultimate/tx_ultimate.yaml@main
   import_full_config: false
 
 api:
@@ -133,7 +139,7 @@ external_components:
 #  - source: /config/esphome/my_components
   - source:
       type: git
-      url: https://github.com/SmartHome-yourself/sonoff-tx-ultimate-for-esphome
+      url: https://github.com/arturek/sonoff-tx-ultimate-for-esphome
       ref: main
     components: [tx_ultimate_touch]
 
@@ -355,6 +361,7 @@ light:
     num_leds: 28
     name: "NeoPixel Light"
     id: leds
+    use_psram: false
     default_transition_length: 0s
     effects:
       - addressable_rainbow:
@@ -435,19 +442,40 @@ light:
           speed: 10
           width: 20
 
+# 1. The I2S hardware definition
 i2s_audio:
-  id: audio_i2s
-  i2s_lrclk_pin: ${audio_lrclk_pin}
-  i2s_bclk_pin: ${audio_bclk_pin}
+  - id: audio_i2s
+    i2s_lrclk_pin: ${audio_lrclk_pin}
+    i2s_bclk_pin: ${audio_bclk_pin}
 
+# 2. The Speaker (The "Worker")
+# https://esphome.io/components/media_player/speaker/
 speaker:
   - platform: i2s_audio
-    id: media_out
+    id: speaker_id
     dac_type: external
     i2s_dout_pin: ${audio_sdata_pin}
     i2s_audio_id: audio_i2s
     i2s_comm_fmt: i2s_lsb
     channel: mono
+    # 16-bit is the default but it is specified here for clarity
+    bits_per_sample: 16bit
+    sample_rate: 16000 # default
+
+# 3. The Media Player (The "Interface")
+media_player:
+  - platform: speaker
+    id: media_out
+    name: "${friendly_name} Player"
+    # Aggressive buffering for non-PSRAM devices
+    # If 16kb failed, we must go lower or optimize the task
+    buffer_size: 16384
+    # Do not enable media pipeline and use the speaker directly to lower the RAM usage.
+    announcement_pipeline:
+      speaker: speaker_id
+      format: WAV
+      sample_rate: 16000  # Standard for TTS, saves 3x RAM vs 44.1kHz
+      num_channels: 1
 
 uart:
   tx_pin: ${uart_tx_pin}
@@ -571,6 +599,8 @@ script:
   - id: refresh_led_default
     mode: restart
     then:
+      - light.turn_off: leds_top
+
       - if:
           condition:
             lambda: "return (${relay_count}>1 && id(relay_1).state) ;"
@@ -710,7 +740,7 @@ script:
     mode: restart
     then:
       - light.turn_off:
-          id: leds
+          id: leds_top
       - script.execute: refresh_led_default
 
   - id: led_on_touch
